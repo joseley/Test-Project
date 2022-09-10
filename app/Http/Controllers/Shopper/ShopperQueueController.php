@@ -23,8 +23,8 @@ class ShopperQueueController extends Controller
         return $statuses;
     }
 
-    private function getShoppersByLocation($locationId, $statusId=null, $limit = null) {
-        $shoppers = Shopper::where('location_id', $locationId);
+    private function getShoppersByLocation(Location $location, $statusId=null, $limit = null) {
+        $shoppers = $location->shoppers();
 
         if(!is_null($statusId)) {
             $shoppers = $shoppers->where('status_id', $statusId);
@@ -50,7 +50,7 @@ class ShopperQueueController extends Controller
         $location = Location::find($validatedData['location_id']);
         $statuses = $this->getStatuses();
         
-        $activeShoppers = $this->getShoppersByLocation($location->id, $statuses->active)->count();
+        $activeShoppers = $this->getShoppersByLocation($location, $statuses->active)->count();
         
         $shopper = new Shopper();
         $shopper->first_name = $validatedData['first_name'];
@@ -95,7 +95,7 @@ class ShopperQueueController extends Controller
         try {
             $shopper->save();
 
-            $this->refreshQueue(Location::find($shopper->location_id));
+            $this->fillUpLocation($shopper->location());
 
             return response()->json([
                 'shopper' => $shopper
@@ -114,15 +114,17 @@ class ShopperQueueController extends Controller
         }
     }
 
-    public function refreshLocation(Request $request, $location_uuid) {
+    public function refreshQueue(Request $request, $location_uuid) {
 
         $location = Location::where(['uuid' => $location_uuid])->first();
 
         try {
-            $affectedRows = $this->refreshQueue($location);
+            $checkedIn = $this->fillUpLocation($location);
 
             return response()->json([
-                'affected_rows' => $affectedRows
+                'shoppers' => [
+                    'checked_in' => $checkedIn ?? 0
+                ]
             ], 200);
         } catch(\Exception $e) {
             if (env('APP_DEBUG', true)) {
@@ -135,16 +137,16 @@ class ShopperQueueController extends Controller
         }
     }
 
-    public function refreshQueue($location) {
+    public function fillUpLocation($location) {
         $statuses = $this->getStatuses();
 
-        $activeShoppers = $this->getShoppersByLocation($location->id, $statuses->active)->count();
+        $activeShoppers = $this->getShoppersByLocation($location, $statuses->active)->count();
 
         $allowedShoppers = $location->shopper_limit - $activeShoppers;
         $allowedShoppers = $allowedShoppers < 0 ? 0 : $allowedShoppers;
 
         if($allowedShoppers > 0) {
-            $nextShoppers = $this->getShoppersByLocation($location->id, $statuses->pending, $allowedShoppers);
+            $nextShoppers = $this->getShoppersByLocation($location, $statuses->pending, $allowedShoppers);
             return $nextShoppers->update(['status_id' => $statuses->active]);
         }
 

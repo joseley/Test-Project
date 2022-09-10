@@ -21,4 +21,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('/check-in', [ShopperQueueController::class, 'checkIn']);
 Route::post('/check-out', [ShopperQueueController::class, 'checkOut']);
-Route::get('/{location_uuid}/refresh', [ShopperQueueController::class, 'refreshLocation']);
+Route::get('/{location_uuid}/refresh', [ShopperQueueController::class, 'refreshQueue']);

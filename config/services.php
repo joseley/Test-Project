@@ -30,4 +30,12 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'shopperqueue' => [
+        'status' => [
+            'active' => env('GROCERY_STORE_STATUS_ACTIVE_ID', 1),
+            'completed' => env('GROCERY_STORE_STATUS_COMPLETED_ID', 2),
+            'pending' => env('GROCERY_STORE_STATUS_PENDING_ID', 3)
+        ]
+    ],
+
 ];

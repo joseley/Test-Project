@@ -95,7 +95,7 @@ class ShopperQueueController extends Controller
         try {
             $shopper->save();
 
-            $this->fillUpLocation($shopper->location());
+            $this->fillUpQueue($shopper->location());
 
             return response()->json([
                 'shopper' => $shopper
@@ -119,8 +119,8 @@ class ShopperQueueController extends Controller
         $location = Location::where(['uuid' => $location_uuid])->first();
 
         try {
-            $checkedOut = $this->autoCheckOutLocation($location);
-            $checkedIn = $this->fillUpLocation($location);
+            $checkedOut = $this->autoCheckOut($location);
+            $checkedIn = $this->fillUpQueue($location);
 
             return response()->json([
                 'shoppers' => [
@@ -139,7 +139,7 @@ class ShopperQueueController extends Controller
         }
     }
 
-    public function fillUpLocation($location) {
+    public function fillUpQueue(Location $location) {
         $statuses = $this->getStatuses();
 
         $activeShoppers = $this->getShoppersByLocation($location, $statuses->active)->count();
@@ -155,7 +155,7 @@ class ShopperQueueController extends Controller
         return 0;
     }
 
-    public function autoCheckOutLocation(Location $location) {
+    public function autoCheckOut(Location $location) {
         $statuses = $this->getStatuses();
 
         $slowShoppers = $this->getShoppersByLocation($location, $statuses->active)

@@ -119,10 +119,12 @@ class ShopperQueueController extends Controller
         $location = Location::where(['uuid' => $location_uuid])->first();
 
         try {
+            $checkedOut = $this->autoCheckOutLocation($location);
             $checkedIn = $this->fillUpLocation($location);
 
             return response()->json([
                 'shoppers' => [
+                    'checked_out' => $checkedOut ?? 0,
                     'checked_in' => $checkedIn ?? 0
                 ]
             ], 200);
@@ -151,5 +153,14 @@ class ShopperQueueController extends Controller
         }
 
         return 0;
+    }
+
+    public function autoCheckOutLocation(Location $location) {
+        $statuses = $this->getStatuses();
+
+        $slowShoppers = $this->getShoppersByLocation($location, $statuses->active)
+            ->whereDate('check_in', '<=', strtotime('-2 hours'));
+
+        return $slowShoppers->update(['status_id' => $statuses->completed]);
     }
 }

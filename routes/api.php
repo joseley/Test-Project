@@ -20,3 +20,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::post('/check-in', [ShopperQueueController::class, 'checkIn']);
+Route::post('/check-out', [ShopperQueueController::class, 'checkOut']);

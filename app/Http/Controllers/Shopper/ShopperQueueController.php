@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Shopper;
 
 use App\Http\Controllers\Controller;
 use App\Models\Shopper\Shopper;
-use App\Models\Shopper\Status;
 use App\Models\Store\Location\Location;
 use Illuminate\Http\Request;
 
@@ -38,7 +37,7 @@ class ShopperQueueController extends Controller
         return $shoppers;
     }
 
-    public function checkIn(request $request) {
+    public function checkIn(Request $request) {
 
         $validatedData = $request->validate([
             'first_name' => 'required',
@@ -114,9 +113,9 @@ class ShopperQueueController extends Controller
         }
     }
 
-    public function refreshQueue(Request $request, $location_uuid) {
+    public function refreshQueue(Request $request, $locationUuid) {
 
-        $location = Location::where(['uuid' => $location_uuid])->first();
+        $location = Location::where(['uuid' => $locationUuid])->first();
 
         try {
             $checkedOut = $this->autoCheckOut($location);

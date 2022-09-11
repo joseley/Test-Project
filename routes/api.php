@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Shopper\ShopperQueueController;
+use App\Http\Controllers\Store\Location\LocationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -21,4 +22,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('/check-in', [ShopperQueueController::class, 'checkIn']);
 Route::post('/check-out', [ShopperQueueController::class, 'checkOut']);
-Route::get('/{locationUuid}/fresh', [ShopperQueueController::class, 'refreshQueue']);
+Route::get('/location/{locationUuid}/fresh', [ShopperQueueController::class, 'refreshQueue']);
+Route::patch('/location/{locationUuid}', [LocationController::class, 'update']);

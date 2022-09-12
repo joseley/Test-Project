@@ -24,7 +24,7 @@ class LocationUpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'locaton_name' => 'string|max:255',
+            'location_name' => 'string|max:255',
             'shopper_limit' => 'int|max:255'
         ];
     }

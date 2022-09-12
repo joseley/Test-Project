@@ -96,11 +96,28 @@ class LocationController extends Controller
             ->with('shoppers', $shoppers);
     }
 
-    public function update(LocationUpdateRequest $request, $locationUuid) {
+    public function editView(LocationUpdateRequest $request, $storeUuid, $locationUuid) {
         $location = Location::where('uuid', $locationUuid)->firstOrFail();
 
-        $location->location_name = $request->input('location_name') ?? $location->location_name;
-        $location->shopper_limit = $request->input('shopper_limit') ?? $location->shopper_limit;
+        return view('stores.location.edit')->with('location', $location);
+    }
+
+    public function edit(LocationUpdateRequest $request, $storeUuid, $locationUuid) {
+        $this->update($locationUuid, $request->all());
+
+        return redirect()->route('store.store', ['store'=>$storeUuid]);
+    }
+
+    public function apiUpdate(LocationUpdateRequest $request, $storeUuid, $locationUuid) {
+        return response()->json($this->update($locationUuid, $request->all()), 200);
+    }
+
+    public function update($locationUuid, $newData) {
+        $location = Location::where('uuid', $locationUuid)->firstOrFail();
+
+        $location->location_name = $newData['location_name'] ?? $location->location_name;
+        $location->shopper_limit = $newData['shopper_limit'] ?? $location->shopper_limit;
+        $location->store_id = $newData['store_id'] ?? $location->store_id;
 
         $location->save();
 

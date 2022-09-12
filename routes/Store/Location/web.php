@@ -21,6 +21,11 @@ Route::name('create')
 Route::name('save')
     ->post('/create', [LocationController::class, 'store']);
 
+Route::name('editView')
+    ->get('/{locationUuid}/edit', [LocationController::class, 'editView']);
+Route::name('edit')
+    ->patch('/{locationUuid}/edit', [LocationController::class, 'edit']);
+
 Route::name('queue')
     ->get('/{locationUuid}', [LocationController::class, 'queue']);
 Route::name('shopper.checkout')

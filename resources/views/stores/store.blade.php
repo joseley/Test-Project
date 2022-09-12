@@ -31,6 +31,9 @@
                                 <th>
                                     View Queue
                                 </th>
+                                <th>
+                                    Edit Store
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -58,6 +61,15 @@
                                                 <a href="{{ route('store.location.queue', ['storeUuid' => $store->uuid, 'locationUuid' => $location['uuid']]) }}"
                                                    class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring focus:ring-gray-300 disabled:opacity-25 transition">
                                                     Queue
+                                                </a>
+                                            @endif
+                                        </x-table-column>
+
+                                        <x-table-column>
+                                            @if( isset($store['uuid']) )
+                                                <a href="{{ route('store.location.editView', ['storeUuid' => $store->uuid, 'locationUuid' => $location['uuid']]) }}"
+                                                   class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring focus:ring-gray-300 disabled:opacity-25 transition">
+                                                    Edit
                                                 </a>
                                             @endif
                                         </x-table-column>

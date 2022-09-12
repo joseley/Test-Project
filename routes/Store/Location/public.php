@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Shopper\ShopperQueueController;
 use App\Http\Controllers\Store\Location\LocationController;
 use App\Http\Controllers\Store\Location\QrCodeController;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,8 @@ Route::namespace('Location')
 
         Route::name('location')
             ->get('/{location}', [LocationController::class, 'public']);
+        Route::name('location.store')
+            ->post('/{location}', [ShopperQueueController::class, 'store']);
 
     });
 

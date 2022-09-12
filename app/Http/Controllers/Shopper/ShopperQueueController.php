@@ -37,30 +37,37 @@ class ShopperQueueController extends Controller
         return $shoppers;
     }
 
-    public function checkIn(Request $request) {
-
+    public function store(Request $request, $location) {
         $validatedData = $request->validate([
             'first_name' => 'required',
             'last_name' => 'required',
-            'email' => 'required|email',
-            'location_id' => 'required|integer|exists:locations,id'
+            'email' => 'required|email'
         ]);
 
-        $location = Location::find($validatedData['location_id']);
-        $statuses = $this->getStatuses();
-        
-        $activeShoppers = $this->getShoppersByLocation($location, $statuses->active)->count();
-        
-        $shopper = new Shopper();
-        $shopper->first_name = $validatedData['first_name'];
-        $shopper->last_name = $validatedData['last_name'];
-        $shopper->email = $validatedData['email'];
-        $shopper->location_id = $validatedData['location_id'];
-        $shopper->check_in = now();
-        $shopper->status_id = $location->shopper_limit > $activeShoppers ? $statuses->active : $statuses->pending;
+        $validatedData['location_uuid'] = $location;
 
         try {
-            $shopper->save();
+            $this->checkIn($validatedData);
+
+            $success = true;
+        } catch(\Exception $e) {
+            $success = false;
+        }
+
+        return redirect()->route('public.location', $location);
+    }
+
+    public function apiCheckIn(Request $request, $locationUuid) {
+        $validatedData = $request->validate([
+            'first_name' => 'required',
+            'last_name' => 'required',
+            'email' => 'required|email'
+        ]);
+
+        $validatedData['location_uuid'] = $locationUuid;
+
+        try {
+            $shopper = $this->checkIn($validatedData);
 
             return response()->json([
                 'shopper' => $shopper
@@ -69,7 +76,7 @@ class ShopperQueueController extends Controller
             if (env('APP_DEBUG', true)) {
                 $response['message'] = $e->getMessage();
                 $response['payload'] = [
-                    'shopper' => $shopper
+                    'shopper' => $response
                 ];
             } else {
                 $response['message'] = 'Something went wrong, please try again';
@@ -77,6 +84,25 @@ class ShopperQueueController extends Controller
 
             return response()->json($response, 500);
         }
+    }
+
+    public function checkIn($checkInData) {
+        $location = Location::where('uuid', $checkInData['location_uuid'])->firstOrFail();
+        $statuses = $this->getStatuses();
+
+        $activeShoppers = $this->getShoppersByLocation($location, $statuses->active)->count();
+
+        $shopper = new Shopper();
+        $shopper->first_name = $checkInData['first_name'];
+        $shopper->last_name = $checkInData['last_name'];
+        $shopper->email = $checkInData['email'];
+        $shopper->location_id = $location->id;
+        $shopper->check_in = now();
+        $shopper->status_id = $location->shopper_limit > $activeShoppers ? $statuses->active : $statuses->pending;
+
+        $shopper->save();
+
+        return $shopper;
     }
 
     public function checkOut(Request $request) {

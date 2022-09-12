@@ -139,9 +139,12 @@ class ShopperQueueController extends Controller
         }
     }
 
-    public function refreshQueue(Request $request, $locationUuid) {
+    public function refreshQueue(Request $request) {
+        $validatedData = $request->validate([
+            'locationUuid' => 'required|string|exists:locations,uuid'
+        ]);
 
-        $location = Location::where(['uuid' => $locationUuid])->first();
+        $location = Location::where(['uuid' => $validatedData['locationUuid']])->first();
 
         try {
             $checkedOut = $this->autoCheckOut($location);
@@ -184,7 +187,7 @@ class ShopperQueueController extends Controller
         $statuses = $this->getStatuses();
 
         $slowShoppers = $this->getShoppersByLocation($location, $statuses->active)
-            ->whereDate('check_in', '<=', strtotime('-2 hours'));
+            ->where('check_in', '<=', date('Y-m-d H:i:s', strtotime("-2 hours")));
 
         return $slowShoppers->update(['status_id' => $statuses->completed]);
     }

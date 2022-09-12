@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Store\Location\LocationController;
+use App\Http\Controllers\Shopper\ShopperQueueController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,3 +23,6 @@ Route::name('save')
 
 Route::name('queue')
     ->get('/{locationUuid}', [LocationController::class, 'queue']);
+Route::name('shopper.checkout')
+    ->patch('/{locationUuid}/checkout', [ShopperQueueController::class, 'webCheckOut']);
+    

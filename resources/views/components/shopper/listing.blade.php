@@ -15,7 +15,7 @@
 </x-table-column>
 
 <x-table-column>
-    {{ $shopper['check_out'] }}
+    <x-shopper.checkouttd :shopper="$shopper"></x-checkouttd>
 </x-table-column>
 
 {{--<x-table-column>--}}

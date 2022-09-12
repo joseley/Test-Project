@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Shopper;
 use App\Http\Controllers\Controller;
 use App\Models\Shopper\Shopper;
 use App\Models\Store\Location\Location;
+use App\Models\User\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ShopperQueueController extends Controller
 {
@@ -104,13 +106,33 @@ class ShopperQueueController extends Controller
         return $shopper;
     }
 
-    public function apiCheckOut(Request $request) {
+    public function webCheckOut(Request $request, $storeUuid, $locationUuid) {
         $validatedData = $request->validate([
-            'shopper_id' => 'required|exists:shoppers,id',
-            'user_id' => 'required|exists:users,id',
+            'shopper_uuid' => 'required|exists:shoppers,uuid',
         ]);
 
-        $data = $request->all();
+        $data['shopper_id'] = Shopper::where('uuid', $validatedData['shopper_uuid'])->first()->id;
+        $data['user_id'] = Auth::id();
+
+        try {
+            $this->checkOut($data);
+
+            $success = true;
+        } catch(\Exception $e) {
+            $success = false;
+        }
+
+        return redirect()->route('store.location.queue', ['storeUuid'=>$storeUuid, 'locationUuid'=>$locationUuid]);
+    }
+
+    public function apiCheckOut(Request $request) {
+        $validatedData = $request->validate([
+            'shopper_uuid' => 'required|exists:shoppers,uuid',
+            'user_uuid' => 'required|exists:users,uuid',
+        ]);
+
+        $data['shopper_id'] = Shopper::where('uuid', $validatedData['shopper_uuid'])->first()->id;
+        $data['user_id'] = User::where('uuid', $validatedData['user_uuid'])->first()->id;
 
         try {
             $shopper = $this->checkOut($data);
@@ -141,7 +163,7 @@ class ShopperQueueController extends Controller
         try {
             $shopper->save();
 
-            $this->fillUpQueue($shopper->location());
+            $this->refreshQueue(Location::find($shopper->location_id));
 
             return response()->json([
                 'shopper' => $shopper
@@ -160,7 +182,7 @@ class ShopperQueueController extends Controller
         }
     }
 
-    public function refreshQueue(Request $request) {
+    public function apiRefreshQueue(Request $request) {
         $validatedData = $request->validate([
             'locationUuid' => 'required|string|exists:locations,uuid',
         ]);
@@ -168,15 +190,9 @@ class ShopperQueueController extends Controller
         $location = Location::where(['uuid' => $validatedData['locationUuid']])->first();
 
         try {
-            $checkedOut = $this->autoCheckOut($location);
-            $checkedIn = $this->fillUpQueue($location);
+            $refreshStatus = $this->refreshQueue($location);
 
-            return response()->json([
-                'shoppers' => [
-                    'checked_out' => $checkedOut ?? 0,
-                    'checked_in' => $checkedIn ?? 0
-                ]
-            ], 200);
+            return response()->json($refreshStatus, 200);
         } catch(\Exception $e) {
             if (env('APP_DEBUG', true)) {
                 $response['message'] = $e->getMessage();
@@ -186,6 +202,18 @@ class ShopperQueueController extends Controller
 
             return response()->json($response, 500);
         }
+    }
+
+    public function refreshQueue(Location $location) {
+            $checkedOut = $this->autoCheckOut($location);
+            $checkedIn = $this->fillUpQueue($location);
+
+            return [
+                'shoppers' => [
+                    'checked_out' => $checkedOut ?? 0,
+                    'checked_in' => $checkedIn ?? 0
+                ]
+            ];
     }
 
     public function fillUpQueue(Location $location) {
